@@ -6,7 +6,7 @@ import androidx.compose.foundation.layout.fillMaxSize
 import androidx.compose.foundation.layout.fillMaxWidth
 import androidx.compose.foundation.layout.padding
 import androidx.compose.foundation.lazy.LazyColumn
-import androidx.compose.foundation.lazy.items
+import androidx.compose.foundation.lazy.itemsIndexed
 import androidx.compose.material3.Card
 import androidx.compose.material3.CircularProgressIndicator
 import androidx.compose.material3.MaterialTheme
@@ -24,10 +24,12 @@ import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.platform.LocalContext
 import androidx.compose.ui.unit.dp
-import androidx.hilt.lifecycle.viewmodel.compose.hiltViewModel
+import androidx.hilt.navigation.compose.hiltViewModel
 import androidx.lifecycle.compose.collectAsStateWithLifecycle
 import com.ch000se.ninjauser.core.presentation.util.asString
 import com.ch000se.ninjauser.domain.User
+
+private const val PREFETCH_DISTANCE = 10
 
 @Composable
 fun HomeScreen(
@@ -76,6 +78,8 @@ fun HomeScreen(
                 is HomeScreenState.Success -> {
                     UserList(
                         users = currentState.users,
+                        isLoadingMore = currentState.isLoadingMore,
+                        onLoadMore = viewModel::loadNextPage,
                         onUserClick = onUserClick
                     )
                 }
@@ -83,6 +87,8 @@ fun HomeScreen(
                 is HomeScreenState.Offline -> {
                     UserList(
                         users = currentState.users,
+                        isLoadingMore = false,
+                        onLoadMore = {},
                         onUserClick = onUserClick
                     )
                 }
@@ -94,15 +100,36 @@ fun HomeScreen(
 @Composable
 private fun UserList(
     users: List<User>,
+    isLoadingMore: Boolean,
+    onLoadMore: () -> Unit,
     onUserClick: (String) -> Unit,
     modifier: Modifier = Modifier
 ) {
     LazyColumn(modifier = modifier.fillMaxSize()) {
-        items(users, key = { it.id }) { user ->
+        itemsIndexed(users, key = { _, user -> user.id }) { index, user ->
             UserItem(
                 user = user,
                 onClick = { onUserClick(user.id) }
             )
+
+            if (index == users.size - PREFETCH_DISTANCE) {
+                LaunchedEffect(users.size) {
+                    onLoadMore()
+                }
+            }
+        }
+
+        if (isLoadingMore) {
+            item {
+                Box(
+                    modifier = Modifier
+                        .fillMaxWidth()
+                        .padding(16.dp),
+                    contentAlignment = Alignment.Center
+                ) {
+                    CircularProgressIndicator()
+                }
+            }
         }
     }
 }

@@ -5,5 +5,5 @@ import javax.inject.Inject
 class FetchNewUserUseCase @Inject constructor(
     private val repository: UserRepository
 ) {
-    suspend operator fun invoke(): Result<List<User>> = repository.fetchNewUsers()
+    suspend operator fun invoke(count: Int): Result<List<User>> = repository.fetchUsers(count)
 }

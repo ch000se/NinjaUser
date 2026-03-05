@@ -5,5 +5,5 @@ interface UserRepository {
 
     suspend fun getUserById(userId: String): User?
 
-    suspend fun fetchNewUsers(): Result<List<User>>
+    suspend fun fetchUsers(count: Int): Result<List<User>>
 }

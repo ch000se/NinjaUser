@@ -22,12 +22,13 @@ class HomeViewModel @Inject constructor(
 ) : ViewModel() {
 
     private var requiresLoading = true
+    private var isLoading = false
 
     private val _state = MutableStateFlow<HomeScreenState>(HomeScreenState.Loading)
     val state = _state
         .onStart {
             if (requiresLoading) {
-                loadUser()
+                loadInitial()
             }
         }.stateIn(
             scope = viewModelScope,
@@ -35,28 +36,64 @@ class HomeViewModel @Inject constructor(
             initialValue = HomeScreenState.Loading
         )
 
-    private fun loadUser() {
+    private fun loadInitial() {
         viewModelScope.launch {
             requiresLoading = false
+            isLoading = true
 
-            val result = fetchNewUserUseCase()
-            val users = getUsersUseCase()
+            val cachedUsers = getUsersUseCase()
+            val result = fetchNewUserUseCase(PAGE_SIZE)
 
-            _state.value = when {
-                users.isEmpty() && result.isFailure ->
-                    HomeScreenState.Error(result.exceptionOrNull().toNetworkError())
-
-                result.isFailure ->
-                    HomeScreenState.Offline(users, result.exceptionOrNull().toNetworkError())
-
-                else -> HomeScreenState.Success(users)
-            }
+            _state.value = result.fold(
+                onSuccess = { users ->
+                    HomeScreenState.Success(users = users)
+                },
+                onFailure = { error ->
+                    if (cachedUsers.isEmpty()) {
+                        HomeScreenState.Error(error.toNetworkError())
+                    } else {
+                        HomeScreenState.Offline(cachedUsers, error.toNetworkError())
+                    }
+                }
+            )
+            isLoading = false
         }
+    }
+
+    fun loadNextPage() {
+        if (isLoading) return
+        val currentState = _state.value
+        if (currentState !is HomeScreenState.Success) return
+
+        isLoading = true
+        _state.value = currentState.copy(isLoadingMore = true)
+
+        viewModelScope.launch {
+            fetchNewUserUseCase(PAGE_SIZE)
+                .onSuccess { newUsers ->
+                    _state.value = HomeScreenState.Success(
+                        users = currentState.users + newUsers,
+                        isLoadingMore = false
+                    )
+                }
+                .onFailure {
+                    _state.value = currentState.copy(isLoadingMore = false)
+                }
+            isLoading = false
+        }
+    }
+
+    companion object {
+        private const val PAGE_SIZE = 30
     }
 }
 
 sealed interface HomeScreenState {
-    data class Success(val users: List<User>) : HomeScreenState
+    data class Success(
+        val users: List<User>,
+        val isLoadingMore: Boolean = false
+    ) : HomeScreenState
+
     data class Error(val error: NetworkError) : HomeScreenState
     data class Offline(val users: List<User>, val error: NetworkError) : HomeScreenState
     data object Loading : HomeScreenState

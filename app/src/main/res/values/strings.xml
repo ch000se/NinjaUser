@@ -7,4 +7,9 @@
     <string name="error_server">Помилка сервера. Спробуйте пізніше.</string>
     <string name="error_serialization">Помилка обробки даних</string>
     <string name="error_unknown">Щось пішло не так</string>
+    <string name="details">Деталі</string>
+    <string name="email">Емайл</string>
+    <string name="phone">Телефон</string>
+    <string name="city">Місто</string>
+    <string name="country">Країна</string>
 </resources>

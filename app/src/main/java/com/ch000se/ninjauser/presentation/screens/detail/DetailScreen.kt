@@ -29,10 +29,12 @@ import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.draw.clip
 import androidx.compose.ui.layout.ContentScale
+import androidx.compose.ui.res.stringResource
 import androidx.compose.ui.unit.dp
 import androidx.hilt.lifecycle.viewmodel.compose.hiltViewModel
 import androidx.lifecycle.compose.collectAsStateWithLifecycle
 import coil3.compose.SubcomposeAsyncImage
+import com.ch000se.ninjauser.R
 import com.ch000se.ninjauser.domain.User
 
 @OptIn(ExperimentalMaterial3Api::class)
@@ -47,12 +49,12 @@ fun DetailScreen(
     Scaffold(
         topBar = {
             TopAppBar(
-                title = { Text("Деталі") },
+                title = { Text(stringResource(R.string.details)) },
                 navigationIcon = {
                     IconButton(onClick = onBackClick) {
                         Icon(
                             imageVector = Icons.AutoMirrored.Filled.ArrowBack,
-                            contentDescription = "Назад"
+                            contentDescription = null
                         )
                     }
                 }
@@ -101,7 +103,7 @@ private fun UserDetails(
     ) {
         SubcomposeAsyncImage(
             model = user.avatarUrl,
-            contentDescription = "Аватар ${user.name}",
+            contentDescription = null,
             contentScale = ContentScale.Crop,
             modifier = Modifier
                 .size(150.dp)
@@ -151,10 +153,10 @@ private fun UserDetails(
             modifier = Modifier.fillMaxWidth(),
             verticalArrangement = Arrangement.spacedBy(16.dp)
         ) {
-            DetailItem(label = "Email", value = user.email)
-            user.phone?.let { DetailItem(label = "Телефон", value = it) }
-            user.city?.let { DetailItem(label = "Місто", value = it) }
-            user.country?.let { DetailItem(label = "Країна", value = it) }
+            DetailItem(label = stringResource(R.string.email), value = user.email)
+            user.phone?.let { DetailItem(label = stringResource(R.string.phone), value = it) }
+            user.city?.let { DetailItem(label = stringResource(R.string.city), value = it) }
+            user.country?.let { DetailItem(label = stringResource(R.string.country), value = it) }
         }
     }
 }

@@ -14,6 +14,8 @@ import dagger.hilt.android.qualifiers.ApplicationContext
 import dagger.hilt.components.SingletonComponent
 import kotlinx.serialization.json.Json
 import okhttp3.MediaType.Companion.toMediaType
+import okhttp3.OkHttpClient
+import com.ch000se.ninjauser.data.remote.AuthInterceptor
 import retrofit2.Converter
 import retrofit2.Retrofit
 import retrofit2.converter.kotlinx.serialization.asConverterFactory
@@ -46,11 +48,23 @@ interface AppModule {
 
         @Provides
         @Singleton
+        fun provideOkHttpClient(
+            authInterceptor: AuthInterceptor
+        ): OkHttpClient {
+            return OkHttpClient.Builder()
+                .addInterceptor(authInterceptor)
+                .build()
+        }
+
+        @Provides
+        @Singleton
         fun providesRetrofit(
+            okHttpClient: OkHttpClient,
             converterFactory: Converter.Factory
         ): Retrofit {
             return Retrofit.Builder()
                 .baseUrl("https://api.api-ninjas.com/")
+                .client(okHttpClient)
                 .addConverterFactory(converterFactory)
                 .build()
         }

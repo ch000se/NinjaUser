@@ -16,7 +16,7 @@ fun UserDto.toDbModel(): UserDbModel = UserDbModel(
     country = country
 )
 
-fun UserDbModel.toEntity(): User = User(
+fun UserDbModel.toUser(): User = User(
     id = id,
     name = name,
     username = username,
@@ -30,4 +30,4 @@ fun UserDbModel.toEntity(): User = User(
 
 fun List<UserDto>.toDbModelList(): List<UserDbModel> = map { it.toDbModel() }
 
-fun List<UserDbModel>.toEntityList(): List<User> = map { it.toEntity() }
+fun List<UserDbModel>.toUserList(): List<User> = map { it.toUser() }

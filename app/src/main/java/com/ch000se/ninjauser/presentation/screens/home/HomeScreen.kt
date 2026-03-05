@@ -45,6 +45,7 @@ fun HomeScreen(
             snackbarShown.value = true
             val errorMessage = (state as HomeScreenState.Offline).error.asString(context)
             snackbarHostState.showSnackbar(errorMessage)
+            snackbarShown.value = false
         }
     }
 

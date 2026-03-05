@@ -21,12 +21,12 @@ class HomeViewModel @Inject constructor(
     private val fetchNewUserUseCase: FetchNewUserUseCase
 ) : ViewModel() {
 
-    private var isLoaded = false
+    private var requiresLoading = true
 
     private val _state = MutableStateFlow<HomeScreenState>(HomeScreenState.Loading)
     val state = _state
         .onStart {
-            if (!isLoaded) {
+            if (requiresLoading) {
                 loadUser()
             }
         }.stateIn(
@@ -37,7 +37,7 @@ class HomeViewModel @Inject constructor(
 
     private fun loadUser() {
         viewModelScope.launch {
-            isLoaded = true
+            requiresLoading = false
 
             val result = fetchNewUserUseCase()
             val users = getUsersUseCase()

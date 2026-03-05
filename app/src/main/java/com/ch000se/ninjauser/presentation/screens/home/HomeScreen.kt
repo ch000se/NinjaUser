@@ -24,8 +24,11 @@ import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.platform.LocalContext
 import androidx.compose.ui.unit.dp
-import androidx.hilt.lifecycle.viewmodel.compose.hiltViewModel
+import androidx.hilt.navigation.compose.hiltViewModel
 import androidx.lifecycle.compose.collectAsStateWithLifecycle
+import androidx.paging.LoadState
+import androidx.paging.compose.collectAsLazyPagingItems
+import com.ch000se.ninjauser.core.domain.util.toNetworkError
 import com.ch000se.ninjauser.core.presentation.util.asString
 import com.ch000se.ninjauser.domain.User
 
@@ -35,16 +38,17 @@ fun HomeScreen(
     modifier: Modifier = Modifier,
     viewModel: HomeViewModel = hiltViewModel()
 ) {
-    val state by viewModel.state.collectAsStateWithLifecycle()
+    val users = viewModel.usersPager.collectAsLazyPagingItems()
+    val cachedUsers by viewModel.cachedUsers.collectAsStateWithLifecycle()
     val snackbarHostState = remember { SnackbarHostState() }
-    val context = LocalContext.current
     val snackbarShown = rememberSaveable { mutableStateOf(false) }
+    val context = LocalContext.current
 
-    LaunchedEffect(state) {
-        if (state is HomeScreenState.Offline && !snackbarShown.value) {
+    LaunchedEffect(users.loadState.refresh) {
+        if (users.loadState.refresh is LoadState.Error && !snackbarShown.value) {
             snackbarShown.value = true
-            val errorMessage = (state as HomeScreenState.Offline).error.asString(context)
-            snackbarHostState.showSnackbar(errorMessage)
+            val error = (users.loadState.refresh as LoadState.Error).error.toNetworkError()
+            snackbarHostState.showSnackbar(error.asString(context))
             snackbarShown.value = false
         }
     }
@@ -58,33 +62,56 @@ fun HomeScreen(
                 .fillMaxSize()
                 .padding(padding)
         ) {
-            when (val currentState = state) {
-                is HomeScreenState.Loading -> {
+            when {
+                users.loadState.refresh is LoadState.Loading && users.itemCount == 0 -> {
                     CircularProgressIndicator(
                         modifier = Modifier.align(Alignment.Center)
                     )
                 }
 
-                is HomeScreenState.Error -> {
+                users.loadState.refresh is LoadState.Error && cachedUsers.isEmpty() -> {
+                    val error = (users.loadState.refresh as LoadState.Error).error.toNetworkError()
                     Text(
-                        text = currentState.error.asString(context),
+                        text = error.asString(context),
                         color = MaterialTheme.colorScheme.error,
                         modifier = Modifier.align(Alignment.Center)
                     )
                 }
 
-                is HomeScreenState.Success -> {
+                users.loadState.refresh is LoadState.Error && cachedUsers.isNotEmpty() -> {
                     UserList(
-                        users = currentState.users,
+                        users = cachedUsers,
                         onUserClick = onUserClick
                     )
                 }
 
-                is HomeScreenState.Offline -> {
-                    UserList(
-                        users = currentState.users,
-                        onUserClick = onUserClick
-                    )
+                else -> {
+                    LazyColumn(modifier = Modifier.fillMaxSize()) {
+                        items(
+                            count = users.itemCount,
+                            key = { index -> users[index]?.id ?: index }
+                        ) { index ->
+                            users[index]?.let { user ->
+                                UserItem(
+                                    user = user,
+                                    onClick = { onUserClick(user.id) }
+                                )
+                            }
+                        }
+
+                        if (users.loadState.append is LoadState.Loading) {
+                            item {
+                                Box(
+                                    modifier = Modifier
+                                        .fillMaxWidth()
+                                        .padding(16.dp),
+                                    contentAlignment = Alignment.Center
+                                ) {
+                                    CircularProgressIndicator()
+                                }
+                            }
+                        }
+                    }
                 }
             }
         }

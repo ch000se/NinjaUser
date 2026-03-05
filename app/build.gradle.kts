@@ -96,4 +96,7 @@ dependencies {
     implementation(libs.okhttp.logging)
 
     implementation(libs.androidx.compose.material.icons.extended)
+
+    implementation("androidx.paging:paging-runtime:3.4.1")
+    implementation("androidx.paging:paging-compose:3.4.1")
 }

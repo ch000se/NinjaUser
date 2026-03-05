@@ -7,6 +7,6 @@ interface NinjaApiService {
 
     @GET("v2/randomuser")
     suspend fun getUsers(
-        @Query("count") count: Int = 10
+        @Query("count") count: Int
     ): List<UserDto>
 }

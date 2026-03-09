@@ -4,8 +4,9 @@ import androidx.lifecycle.ViewModel
 import androidx.lifecycle.viewModelScope
 import com.ch000se.ninjauser.core.domain.util.NetworkError
 import com.ch000se.ninjauser.core.domain.util.toNetworkError
-import com.ch000se.ninjauser.core.presentation.LazyStateContainer
+import com.ch000se.ninjauser.core.presentation.DefaultStateContainer
 import com.ch000se.ninjauser.core.presentation.StateContainer
+import com.ch000se.ninjauser.core.presentation.onStartState
 import com.ch000se.ninjauser.domain.FetchNewUserUseCase
 import com.ch000se.ninjauser.domain.GetUsersUseCase
 import com.ch000se.ninjauser.domain.User
@@ -17,12 +18,12 @@ import javax.inject.Inject
 class HomeViewModel @Inject constructor(
     private val getUsersUseCase: GetUsersUseCase,
     private val fetchNewUserUseCase: FetchNewUserUseCase,
-) : ViewModel(), StateContainer<HomeScreenState> by LazyStateContainer(
+) : ViewModel(), StateContainer<HomeScreenState> by DefaultStateContainer(
     initialState = HomeScreenState.Loading,
 ) {
 
     init {
-        setup(scope = viewModelScope, onStart = ::loadInitial)
+        onStartState(::loadInitial)
     }
 
     private var isLoading = false

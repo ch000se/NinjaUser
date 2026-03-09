@@ -1,5 +1,6 @@
 package com.ch000se.ninjauser.data
 
+import com.ch000se.ninjauser.data.cache.UserCache
 import com.ch000se.ninjauser.data.local.UserDao
 import com.ch000se.ninjauser.data.mapper.toDbModelList
 import com.ch000se.ninjauser.data.mapper.toUserFromDb
@@ -7,22 +8,20 @@ import com.ch000se.ninjauser.data.mapper.toUserListFromDb
 import com.ch000se.ninjauser.data.remote.NinjaApiService
 import com.ch000se.ninjauser.domain.User
 import com.ch000se.ninjauser.domain.UserRepository
-import java.util.concurrent.ConcurrentHashMap
 import javax.inject.Inject
 
 class UserRepositoryImpl @Inject constructor(
     private val userDao: UserDao,
-    private val ninjaApiService: NinjaApiService
+    private val ninjaApiService: NinjaApiService,
+    private val userCache: UserCache
 ) : UserRepository {
-
-    private val usersCache = ConcurrentHashMap<String, User>()
 
     override suspend fun getUsers(): List<User> {
         return userDao.getUsers().toUserListFromDb()
     }
 
     override suspend fun getUserById(userId: String): User? {
-        return usersCache[userId] ?: userDao.getUser(userId)?.toUserFromDb()
+        return userCache.get(userId) ?: userDao.getUser(userId)?.toUserFromDb()
     }
 
     override suspend fun fetchUsers(count: Int): Result<List<User>> {
@@ -31,7 +30,7 @@ class UserRepositoryImpl @Inject constructor(
             val users = response.toDbModelList()
             userDao.replaceAllUsers(users)
             val domainUsers = users.toUserListFromDb()
-            domainUsers.forEach { usersCache[it.id] = it }
+            userCache.putAll(domainUsers)
             Result.success(domainUsers)
         } catch (e: Exception) {
             Result.failure(e)

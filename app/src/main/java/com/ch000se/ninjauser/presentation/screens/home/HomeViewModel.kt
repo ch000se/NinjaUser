@@ -32,7 +32,6 @@ class HomeViewModel @Inject constructor(
         viewModelScope.launch {
             isLoading = true
 
-            val cachedUsers = getUsersUseCase()
             val result = fetchNewUserUseCase(PAGE_SIZE)
 
             setState(
@@ -41,6 +40,7 @@ class HomeViewModel @Inject constructor(
                         HomeScreenState.Success(users = users)
                     },
                     onFailure = { error ->
+                        val cachedUsers = getUsersUseCase()
                         if (cachedUsers.isEmpty()) {
                             HomeScreenState.Error(error.toNetworkError())
                         } else {

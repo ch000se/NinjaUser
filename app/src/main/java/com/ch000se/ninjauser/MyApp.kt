@@ -1,7 +1,10 @@
 package com.ch000se.ninjauser
 
 import android.app.Application
-import com.ch000se.ninjauser.di.appModule
+import com.ch000se.ninjauser.di.dataModule
+import com.ch000se.ninjauser.di.domainModule
+import com.ch000se.ninjauser.di.networkModule
+import com.ch000se.ninjauser.di.viewModelModule
 import org.koin.android.ext.koin.androidContext
 import org.koin.android.ext.koin.androidLogger
 import org.koin.core.context.startKoin
@@ -13,7 +16,14 @@ class MyApp : Application() {
         startKoin {
             androidLogger()
             androidContext(this@MyApp)
-            modules(appModule)
+            modules(
+                listOf(
+                    networkModule,
+                    dataModule,
+                    domainModule,
+                    viewModelModule
+                )
+            )
         }
     }
 }

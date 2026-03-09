@@ -16,6 +16,7 @@ import com.ch000se.ninjauser.presentation.screens.home.HomeViewModel
 import kotlinx.serialization.json.Json
 import okhttp3.MediaType.Companion.toMediaType
 import okhttp3.OkHttpClient
+import org.koin.core.module.dsl.factoryOf
 import org.koin.core.module.dsl.singleOf
 import org.koin.core.module.dsl.viewModel
 import org.koin.core.module.dsl.viewModelOf
@@ -25,17 +26,12 @@ import retrofit2.Retrofit
 import retrofit2.converter.kotlinx.serialization.asConverterFactory
 import retrofit2.create
 
-val appModule = module {
-
+val networkModule = module {
     single {
         Json {
             ignoreUnknownKeys = true
             coerceInputValues = true
         }
-    }
-
-    single {
-        get<Json>().asConverterFactory("application/json".toMediaType())
     }
 
     singleOf(::AuthInterceptor)
@@ -50,14 +46,14 @@ val appModule = module {
         Retrofit.Builder()
             .baseUrl("https://api.api-ninjas.com/")
             .client(get())
-            .addConverterFactory(get())
+            .addConverterFactory(get<Json>().asConverterFactory("application/json".toMediaType()))
             .build()
     }
 
-    single<NinjaApiService> {
-        get<Retrofit>().create()
-    }
+    single<NinjaApiService> { get<Retrofit>().create() }
+}
 
+val dataModule = module {
     single {
         Room.databaseBuilder(
             context = get(),
@@ -71,11 +67,15 @@ val appModule = module {
     singleOf(::UserCacheImpl) bind UserCache::class
 
     singleOf(::UserRepositoryImpl) bind UserRepository::class
+}
 
-    singleOf(::GetUserUseCase)
-    singleOf(::GetUsersUseCase)
-    singleOf(::FetchNewUserUseCase)
+val domainModule = module {
+    factoryOf(::GetUserUseCase)
+    factoryOf(::GetUsersUseCase)
+    factoryOf(::FetchNewUserUseCase)
+}
 
+val viewModelModule = module {
     viewModelOf(::HomeViewModel)
 
     viewModel { params ->

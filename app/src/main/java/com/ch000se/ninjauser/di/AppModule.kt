@@ -3,7 +3,10 @@ package com.ch000se.ninjauser.di
 import android.content.Context
 import androidx.room.Room
 import com.ch000se.ninjauser.data.UserRepositoryImpl
+import com.ch000se.ninjauser.data.cache.UserCache
+import com.ch000se.ninjauser.data.cache.UserCacheImpl
 import com.ch000se.ninjauser.data.local.NinjaDatabase
+import com.ch000se.ninjauser.data.remote.AuthInterceptor
 import com.ch000se.ninjauser.data.remote.NinjaApiService
 import com.ch000se.ninjauser.domain.UserRepository
 import dagger.Binds
@@ -15,7 +18,6 @@ import dagger.hilt.components.SingletonComponent
 import kotlinx.serialization.json.Json
 import okhttp3.MediaType.Companion.toMediaType
 import okhttp3.OkHttpClient
-import com.ch000se.ninjauser.data.remote.AuthInterceptor
 import retrofit2.Converter
 import retrofit2.Retrofit
 import retrofit2.converter.kotlinx.serialization.asConverterFactory
@@ -29,6 +31,10 @@ interface AppModule {
     @Binds
     @Singleton
     fun bindUserRepository(impl: UserRepositoryImpl): UserRepository
+
+    @Binds
+    @Singleton
+    fun bindUserCache(impl: UserCacheImpl): UserCache
 
     companion object {
 

@@ -2,9 +2,8 @@ package com.ch000se.ninjauser.data.cache
 
 import com.ch000se.ninjauser.domain.User
 import java.util.concurrent.ConcurrentHashMap
-import javax.inject.Inject
 
-class UserCacheImpl @Inject constructor() : UserCache {
+class UserCacheImpl : UserCache {
 
     private val cache = ConcurrentHashMap<String, User>()
 

@@ -8,9 +8,8 @@ import com.ch000se.ninjauser.data.mapper.toUserListFromDb
 import com.ch000se.ninjauser.data.remote.NinjaApiService
 import com.ch000se.ninjauser.domain.User
 import com.ch000se.ninjauser.domain.UserRepository
-import javax.inject.Inject
 
-class UserRepositoryImpl @Inject constructor(
+class UserRepositoryImpl(
     private val userDao: UserDao,
     private val ninjaApiService: NinjaApiService,
     private val userCache: UserCache

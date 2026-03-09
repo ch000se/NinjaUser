@@ -10,12 +10,9 @@ import com.ch000se.ninjauser.core.presentation.onStartState
 import com.ch000se.ninjauser.domain.FetchNewUserUseCase
 import com.ch000se.ninjauser.domain.GetUsersUseCase
 import com.ch000se.ninjauser.domain.User
-import dagger.hilt.android.lifecycle.HiltViewModel
 import kotlinx.coroutines.launch
-import javax.inject.Inject
 
-@HiltViewModel
-class HomeViewModel @Inject constructor(
+class HomeViewModel(
     private val getUsersUseCase: GetUsersUseCase,
     private val fetchNewUserUseCase: FetchNewUserUseCase,
 ) : ViewModel(), StateContainer<HomeScreenState> by DefaultStateContainer(

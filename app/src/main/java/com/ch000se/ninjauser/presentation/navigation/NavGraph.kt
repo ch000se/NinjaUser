@@ -4,6 +4,7 @@ import androidx.compose.runtime.Composable
 import androidx.navigation.NavHostController
 import androidx.navigation.compose.NavHost
 import androidx.navigation.compose.composable
+import androidx.navigation.toRoute
 import com.ch000se.ninjauser.presentation.screens.detail.DetailScreen
 import com.ch000se.ninjauser.presentation.screens.home.HomeScreen
 
@@ -26,8 +27,10 @@ fun NavGraph(
             )
         }
 
-        composable<Screens.Detail> {
+        composable<Screens.Detail> { backStackEntry ->
+            val detail = backStackEntry.toRoute<Screens.Detail>()
             DetailScreen(
+                userId = detail.userId,
                 onBackClick = { navController.navigateUp() }
             )
         }

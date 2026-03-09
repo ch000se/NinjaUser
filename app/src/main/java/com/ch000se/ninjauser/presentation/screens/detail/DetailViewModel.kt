@@ -4,6 +4,7 @@ import androidx.lifecycle.SavedStateHandle
 import androidx.lifecycle.ViewModel
 import androidx.lifecycle.viewModelScope
 import com.ch000se.ninjauser.core.presentation.LazyStateContainer
+import com.ch000se.ninjauser.core.presentation.StateContainer
 import com.ch000se.ninjauser.domain.GetUserUseCase
 import com.ch000se.ninjauser.domain.User
 import dagger.hilt.android.lifecycle.HiltViewModel
@@ -14,23 +15,20 @@ import javax.inject.Inject
 class DetailViewModel @Inject constructor(
     private val getUserUseCase: GetUserUseCase,
     savedStateHandle: SavedStateHandle
-) : ViewModel() {
-
+) : ViewModel(), StateContainer<DetailScreenState> by LazyStateContainer(
+    initialState = DetailScreenState.Loading,
+) {
     private val userId: String = savedStateHandle.get<String>("userId")
         ?: throw IllegalArgumentException("itemId is required")
 
-    private val container = LazyStateContainer<DetailScreenState>(
-        initialState = DetailScreenState.Loading,
-        scope = viewModelScope,
-        onStart = { loadUser() }
-    )
-
-    val state = container.state
+    init {
+        setup(viewModelScope, ::loadUser)
+    }
 
     private fun loadUser() {
         viewModelScope.launch {
             val user = getUserUseCase(userId)
-            container.setState(
+            setState(
                 if (user != null) {
                     DetailScreenState.Success(user)
                 } else {

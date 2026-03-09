@@ -5,6 +5,7 @@ import androidx.lifecycle.viewModelScope
 import com.ch000se.ninjauser.core.domain.util.NetworkError
 import com.ch000se.ninjauser.core.domain.util.toNetworkError
 import com.ch000se.ninjauser.core.presentation.LazyStateContainer
+import com.ch000se.ninjauser.core.presentation.StateContainer
 import com.ch000se.ninjauser.domain.FetchNewUserUseCase
 import com.ch000se.ninjauser.domain.GetUsersUseCase
 import com.ch000se.ninjauser.domain.User
@@ -15,29 +16,25 @@ import javax.inject.Inject
 @HiltViewModel
 class HomeViewModel @Inject constructor(
     private val getUsersUseCase: GetUsersUseCase,
-    private val fetchNewUserUseCase: FetchNewUserUseCase
-) : ViewModel() {
+    private val fetchNewUserUseCase: FetchNewUserUseCase,
+) : ViewModel(), StateContainer<HomeScreenState> by LazyStateContainer(
+    initialState = HomeScreenState.Loading,
+) {
+
+    init {
+        setup(scope = viewModelScope, onStart = ::loadInitial)
+    }
 
     private var isLoading = false
 
-    private val container = LazyStateContainer<HomeScreenState>(
-        initialState = HomeScreenState.Loading,
-        scope = viewModelScope,
-        onStart = { loadInitial() }
-    )
-
-    val state = container.state
-
     private fun loadInitial() {
         viewModelScope.launch {
-
-
             isLoading = true
 
             val cachedUsers = getUsersUseCase()
             val result = fetchNewUserUseCase(PAGE_SIZE)
 
-            container.setState(
+            setState(
                 result.fold(
                     onSuccess = { users ->
                         HomeScreenState.Success(users = users)
@@ -57,24 +54,25 @@ class HomeViewModel @Inject constructor(
 
     fun loadNextPage() {
         if (isLoading) return
-        val currentState = container.state.value
+        val currentState = state.value
+
         if (currentState !is HomeScreenState.Success) return
 
         isLoading = true
-        container.setState(currentState.copy(isLoadingMore = true))
+        setState(currentState.copy(isLoadingMore = true))
 
         viewModelScope.launch {
             fetchNewUserUseCase(PAGE_SIZE)
                 .onSuccess { newUsers ->
-                    container.setState(
+                    setState(
                         HomeScreenState.Success(
                             users = currentState.users + newUsers,
-                            isLoadingMore = false
+                            isLoadingMore = false,
                         )
                     )
                 }
                 .onFailure {
-                    container.setState(currentState.copy(isLoadingMore = false))
+                    setState(currentState.copy(isLoadingMore = false))
                 }
             isLoading = false
         }

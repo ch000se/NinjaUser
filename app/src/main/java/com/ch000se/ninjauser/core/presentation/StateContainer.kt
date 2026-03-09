@@ -10,55 +10,41 @@ import kotlinx.coroutines.flow.update
 
 interface StateContainer<STATE> {
     val state: StateFlow<STATE>
-    fun updateState(reducer: (STATE) -> STATE)
     fun setState(newState: STATE)
+    fun updateState(reducer: STATE.() -> STATE)
+    fun setup(scope: CoroutineScope, onStart: () -> Unit = {})
 }
 
-// Якщо не треба буде onStart()
-class StateContainerDelegate<STATE>(
+class LazyStateContainer<STATE>(
     private val initialState: STATE
 ) : StateContainer<STATE> {
 
     private val _state = MutableStateFlow(initialState)
-    override val state: StateFlow<STATE> = _state
-
-    override fun updateState(reducer: (STATE) -> STATE) {
-        _state.update(reducer)
-    }
-
-    override fun setState(newState: STATE) {
-        _state.value = newState
-    }
-}
-
-// З onStart()
-class LazyStateContainer<STATE>(
-    private val initialState: STATE,
-    private val scope: CoroutineScope,
-    onStart: () -> Unit
-) : StateContainer<STATE> {
-
-    private val _state = MutableStateFlow(initialState)
+    private lateinit var _stateFlow: StateFlow<STATE>
     private var isInitialized = false
 
-    override val state: StateFlow<STATE> = _state
-        .onStart {
-            if (!isInitialized) {
-                onStart()
-                isInitialized = true
-            }
-        }
-        .stateIn(
-            scope = scope,
-            started = SharingStarted.WhileSubscribed(5000),
-            initialValue = initialState
-        )
+    override val state: StateFlow<STATE> get() = _stateFlow
 
-    override fun updateState(reducer: (STATE) -> STATE) {
-        _state.update(reducer)
+    override fun setup(scope: CoroutineScope, onStart: () -> Unit) {
+        _stateFlow = _state
+            .onStart {
+                if (!isInitialized) {
+                    onStart()
+                    isInitialized = true
+                }
+            }
+            .stateIn(
+                scope,
+                SharingStarted.WhileSubscribed(5000),
+                initialState
+            )
     }
 
     override fun setState(newState: STATE) {
         _state.value = newState
+    }
+
+    override fun updateState(reducer: STATE.() -> STATE) {
+        _state.update { it.reducer() }
     }
 }

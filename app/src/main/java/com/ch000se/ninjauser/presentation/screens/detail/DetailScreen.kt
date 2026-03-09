@@ -40,9 +40,14 @@ import com.ch000se.ninjauser.domain.User
 @OptIn(ExperimentalMaterial3Api::class)
 @Composable
 fun DetailScreen(
+    userId: String,
     onBackClick: () -> Unit,
     modifier: Modifier = Modifier,
-    viewModel: DetailViewModel = hiltViewModel()
+    viewModel: DetailViewModel = hiltViewModel(
+        creationCallback = { factory: DetailViewModel.Factory ->
+            factory.create(userId)
+        }
+    )
 ) {
     val state by viewModel.state.collectAsStateWithLifecycle()
 

@@ -1,6 +1,5 @@
 package com.ch000se.ninjauser.presentation.screens.detail
 
-import androidx.lifecycle.SavedStateHandle
 import androidx.lifecycle.ViewModel
 import androidx.lifecycle.viewModelScope
 import com.ch000se.ninjauser.core.presentation.DefaultStateContainer
@@ -8,19 +7,19 @@ import com.ch000se.ninjauser.core.presentation.StateContainer
 import com.ch000se.ninjauser.core.presentation.onStartState
 import com.ch000se.ninjauser.domain.GetUserUseCase
 import com.ch000se.ninjauser.domain.User
+import dagger.assisted.Assisted
+import dagger.assisted.AssistedFactory
+import dagger.assisted.AssistedInject
 import dagger.hilt.android.lifecycle.HiltViewModel
 import kotlinx.coroutines.launch
-import javax.inject.Inject
 
-@HiltViewModel
-class DetailViewModel @Inject constructor(
+@HiltViewModel(assistedFactory = DetailViewModel.Factory::class)
+class DetailViewModel @AssistedInject constructor(
     private val getUserUseCase: GetUserUseCase,
-    savedStateHandle: SavedStateHandle
+    @Assisted("userId") private val userId: String
 ) : ViewModel(), StateContainer<DetailScreenState> by DefaultStateContainer(
     initialState = DetailScreenState.Loading,
 ) {
-    private val userId: String = savedStateHandle.get<String>("userId")
-        ?: throw IllegalArgumentException("itemId is required")
 
     init {
         onStartState(::loadUser)
@@ -37,6 +36,11 @@ class DetailViewModel @Inject constructor(
                 }
             )
         }
+    }
+
+    @AssistedFactory
+    interface Factory {
+        fun create(@Assisted("userId") userId: String): DetailViewModel
     }
 }
 

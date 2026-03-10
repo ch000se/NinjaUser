@@ -5,6 +5,7 @@ import com.ch000se.ninjauser.di.dataModule
 import com.ch000se.ninjauser.di.domainModule
 import com.ch000se.ninjauser.di.networkModule
 import com.ch000se.ninjauser.di.viewModelModule
+import io.kotzilla.sdk.analytics.koin.analytics
 import org.koin.android.ext.koin.androidContext
 import org.koin.android.ext.koin.androidLogger
 import org.koin.core.context.startKoin
@@ -16,6 +17,7 @@ class MyApp : Application() {
         startKoin {
             androidLogger()
             androidContext(this@MyApp)
+            analytics()
             modules(
                 listOf(
                     networkModule,
